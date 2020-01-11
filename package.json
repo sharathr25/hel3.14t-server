@@ -1,0 +1,17 @@
+{
+  "name": "hel3.14t-server",
+  "version": "1.0.0",
+  "description": "help app server",
+  "main": "index.js",
+  "scripts": {
+    "test": "pwd"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "express-graphql": "^0.9.0",
+    "graphql": "^14.5.8",
+    "mongoose": "^5.8.6"
+  }
+}
