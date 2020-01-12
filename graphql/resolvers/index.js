@@ -29,13 +29,14 @@ module.exports = {
         }).catch(err => console.log(err));
     },
     updateHelp: (args) => {
-        const { id, key, value } = args;
-        if (keyOfarraysInHelpModel.indexOf(key) > -1) {
-            return HelpModel.updateOne({ _id: id }, { "$push": { [key]: value } })
+        const { id, key, value, type, operation } = args;
+        if (type === "array") {
+            return HelpModel.updateOne({ _id: id }, { [`$${operation}`]: { [key]: value } })
                 .then((res) => {
                     return "SUCESS"
                 })
                 .catch((err) => {
+                    console.log(err);
                     return "ERROR"}
                 );
         }
@@ -49,6 +50,16 @@ module.exports = {
             .then(() => "SUCESS")
             .catch(() => "ERROR");
     },
+    user: (args) => {
+        const { uid } = args;
+        return User.findOne({ uid })
+        .then((res) => {
+            return res;
+        })
+        .catch((err) => {
+            console.log(err);
+        });
+    },
     createUser: (args) => {
         const { uid } = args;
         return new User({ uid }).save().then((res) => {
@@ -56,11 +67,17 @@ module.exports = {
         }).catch(err => console.log(err));
     },
     updateUser: (args) => {
-        const { uid, key, value } = args;
-        if (keyOfarraysInUser.indexOf(key) > -1) {
-            return User.updateOne({ uid }, { "$push": { [key]: value } })
-                .then(() => "SUCESS")
-                .catch(() => "ERROR");
+        const { uid, key, value, type, operation } = args;
+        if (type === "array") {
+            return User.updateOne({ uid }, { [`$${operation}`]: { [key]: value } })
+                .then((res) => {
+                    console.log(res)
+                    return "SUCESS"
+                })
+                .catch((err) => {
+                    console.log(err)
+                    return "ERROR"
+                });
         }
         return User.updateOne({ uid }, { [key]: value })
             .then(() => "SUCESS")

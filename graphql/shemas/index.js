@@ -4,7 +4,8 @@ module.exports = `
 
     type Query {
         helps: [HelpRequest!]!
-        help(id:String!): HelpRequest
+        help(id:String!): HelpRequest!
+        user(uid:String!): User!
     }
 
     input HelpRequestInput {
@@ -23,10 +24,10 @@ module.exports = `
 
     type Mutation {
         createHelp(data:HelpRequestInput!):HelpRequest!
-        updateHelp(id:String!, key:String!, value:Any):String!
+        updateHelp(id:String!, key:String!, value:Any, type:String!, operation:String!):String!
         deleteHelp(id:String!):String!
         createUser(uid:String):User!
-        updateUser(uid:String!, key:String!, value:Any):String!
+        updateUser(uid:String!, key:String!, value:Any, type:String!, operation:String!):String!
         deleteUser(uid:String):String!
     }
 
@@ -35,6 +36,13 @@ module.exports = `
         name: String!,
         uid: String!,
         xp: Int!
+    }
+
+    type AcceptedUser {
+        _id: ID!
+        name: String!,
+        uid: String!,
+        mobileNo: String!
     }
 
     type HelpRequest {
@@ -50,15 +58,16 @@ module.exports = `
         noPeopleAccepted: Int!
         status: String!
         description: String!
-        usersAccepted : [String!]!
+        usersAccepted : [AcceptedUser!]!
         usersRequested: [RequestedUser!]!
     }
 
     type User {
         uid: String!,
         xp: Int!,
+        name: String!,
         stars: Int!,
         notifications: [String!],
-        completedHelpRequests: [String!]
+        createdHelpRequests: [String!]
     }
 `;
