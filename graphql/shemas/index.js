@@ -8,7 +8,7 @@ module.exports = `
     }
 
     input HelpRequestInput {
-        uid: String!
+        creator: String!
         mobileNo: String!
         name: String!
         latitude: Float!
@@ -25,11 +25,21 @@ module.exports = `
         createHelp(data:HelpRequestInput!):HelpRequest!
         updateHelp(id:String!, key:String!, value:Any):String!
         deleteHelp(id:String!):String!
+        createUser(uid:String):User!
+        updateUser(uid:String!, key:String!, value:Any):String!
+        deleteUser(uid:String):String!
+    }
+
+    type RequestedUser{
+        _id: ID!
+        name: String!,
+        uid: String!,
+        xp: Int!
     }
 
     type HelpRequest {
         _id: ID!
-        uid: String!
+        creator: String!
         mobileNo: String!
         name: String!
         latitude: String!
@@ -41,6 +51,14 @@ module.exports = `
         status: String!
         description: String!
         usersAccepted : [String!]!
-        usersRequested: [String!]!
+        usersRequested: [RequestedUser!]!
+    }
+
+    type User {
+        uid: String!,
+        xp: Int!,
+        stars: Int!,
+        notifications: [String!],
+        completedHelpRequests: [String!]
     }
 `;
