@@ -13,6 +13,7 @@ const helpRequestShema = new Schema({
     noPeopleRequired: { type: Number, default: 0 },
     usersRequested: { type: [{ uid: String, name: String, xp: Number }] },
     usersAccepted: { type: [{ uid: String, name: String, mobileNo: String }] },
+    usersRejected: { type: [{ uid: String }] }
 });
 
 module.exports = mongoose.model('HelpRequest', helpRequestShema);

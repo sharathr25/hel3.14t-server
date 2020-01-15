@@ -1,20 +1,27 @@
 const express = require('express');
-const graphqlHTTP = require('express-graphql');
-const { buildSchema } = require('graphql');
+const { ApolloServer, gql } = require('apollo-server-express')
+const { createServer } = require('http');
 const mongoose = require('mongoose');
-const schema  =require('./graphql/shemas');
+const schema = require('./graphql/shemas');
 const resolvers = require('./graphql/resolvers');
+
+const PORT = 4000;
 
 const app = express();
 
-app.use('/graphql', graphqlHTTP({
-    schema: buildSchema(schema),
-    rootValue: resolvers,
-    graphiql: true,
-}));
+const server = new ApolloServer({
+    typeDefs: gql`${schema}`,
+    resolvers,
+})
 
-mongoose.connect('mongodb://localhost:27017/helpApp', { useNewUrlParser: true, useUnifiedTopology: true });
+server.applyMiddleware({app});
 
-app.listen(3000, () => {
-    console.log("Listening on port 3000...........");
+const ws = createServer(app);
+
+server.installSubscriptionHandlers(ws);
+
+ws.listen({port:PORT}, () => {
+    console.log(`Apollo Server is now running on http://localhost:${PORT}`);
 });
+
+mongoose.connect('mongodb://localhost:27017/helpApp', { useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false });

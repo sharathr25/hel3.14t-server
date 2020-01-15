@@ -1,0 +1,88 @@
+const HelpModel = require('../../models/HelpModel');
+const { PubSub } = require('apollo-server-express');
+
+const pubsub = new PubSub();
+
+const CREATE_HELP = "CREATE_HELP";
+const UPDATE_HELP = "UPDATE_HELP";
+const DELETE_HELP = "DELETE_HELP";
+
+module.exports = {
+    Query: {
+        helps: async () => {
+            try {
+                const data = await HelpModel.find({});
+                return data;
+            } catch (error) {
+                console.log(error);
+                throw new Error;
+            }
+        },
+        help: async (args) => {
+            try {
+                const { id } = args;
+                const res = await HelpModel.findOne({ _id: id });
+                return res._doc;
+            } catch (error) {
+                console.log(error);
+                throw new Error;
+            }
+        },
+    },
+    Mutation: {
+        createHelp: async (root, args, context) => {
+            try {
+                const { data } = args;
+                const res = await new HelpModel(data).save();
+                pubsub.publish(CREATE_HELP, {onCreateHelp: { mutation: "CREATE",payload: res._doc }}); // onCreateHelp is the resolver in 'Subscription'
+                return res._doc;
+            } catch (error) {
+                throw new Error;
+            }
+        },
+        updateHelp: async (root, args, context) => {
+            const { id, key, value, type = "update", operation = "update" } = args;
+            try {
+                if (type === "array") {
+                    let data = await HelpModel.findByIdAndUpdate({ _id: id }, { [`$${operation}`]: { [key]: value } }, { new: true });
+                    if (key === "usersAccepted") {
+                        const { usersAccepted, noPeopleRequired } = data._doc;
+                        if (usersAccepted.length === noPeopleRequired) {
+                            data = await HelpModel.findByIdAndUpdate({ _id: id }, { "status": "ON_GOING" }, { new: true })
+                        }
+                    }
+                    pubsub.publish(UPDATE_HELP, {onUpdateHelp: { mutation: "UPDATE", payload: data._doc }});
+                    return data._doc;
+                }
+                const data = await HelpModel.findByIdAndUpdate({ _id: id }, { [key]: value }, { new: true });
+                console.log(data);
+                return data._doc;
+            } catch (error) {
+                console.log(error);
+                throw new Error;
+            }
+        },
+        deleteHelp: async (root, args, context) => {
+            const { id } = args;
+            try {
+                const res = HelpModel.deleteOne({ _id: id });
+                pubsub.publish(DELETE_HELP, {onDeleteHelp: { mutation: "UPDATE", payload: data._doc }});
+                return res._doc;
+            } catch (error) {
+                console.log(error);
+                throw new Error;
+            }
+        },
+    },
+    Subscription: {
+        onCreateHelp: {
+            subscribe: () => pubsub.asyncIterator(CREATE_HELP)
+        },
+        onUpdateHelp: {
+            subscribe: () => pubsub.asyncIterator(UPDATE_HELP)
+        },
+        onDeleteHelp: {
+            subscribe: () => pubsub.asyncIterator(DELETE_HELP)
+        }
+    },
+}
