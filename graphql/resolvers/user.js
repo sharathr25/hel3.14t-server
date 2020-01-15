@@ -5,9 +5,12 @@ const pubsub = new PubSub();
 
 const XP_INCREMENT_PER_HELP = 10;
 
+const UPDATE_USER = "UPDATE_USER";
+const INCREMENT_XP_FOR_USER = "INCREMENT_XP_FOR_USER";
+
 module.exports = {
     Query: {
-        user: async (args) => {
+        user: async (root, args, context) => {
             const { uid } = args;
             try {
                 const user = await User.findOne({ uid });
@@ -23,8 +26,6 @@ module.exports = {
             const { uid } = args;
             try {
                 const user = await new User({ uid }).save();
-                pubsub.publish("HELP", { mutation: "CREATE", payload: user._doc });
-
                 return user._doc;
             } catch (error) {
                 console.log(error);
@@ -34,11 +35,13 @@ module.exports = {
         updateUser: async (root, args, context) => {
             const { uid, key, value, type = "update", operation = "update" } = args;
             try {
+                let user;
                 if (type === "array") {
-                    const user = await User.findOneAndUpdate({ uid }, { [`$${operation}`]: { [key]: value } }, { new: true });
-                    return user._doc;
+                    user = await User.findOneAndUpdate({ uid }, { [`$${operation}`]: { [key]: value } }, { new: true });
+                } else {
+                    user = await User.findOneAndUpdate({ uid }, { [key]: value }, { new: true });
                 }
-                const user = await User.findOneAndUpdate({ uid }, { [key]: value }, { new: true });
+                pubsub.publish(UPDATE_USER, { onUpdateUser: { ...user._doc } })
                 return user._doc;
             } catch (error) {
                 console.log(error)
@@ -51,6 +54,7 @@ module.exports = {
                 let user = await User.findOne({ uid });
                 const xp = user._doc.xp;
                 user = await User.findOneAndUpdate({ uid }, { xp: xp + XP_INCREMENT_PER_HELP }, { new: true });
+                pubsub.publish(INCREMENT_XP_FOR_USER, { onXpIncrement: { ...user._doc } })
                 return user._doc;
             } catch (error) {
                 console.log(error);
@@ -67,5 +71,13 @@ module.exports = {
                 throw new Error;
             }
         },
+    },
+    Subscription: {
+        onUpdateUser: {
+            subscribe: () => pubsub.asyncIterator(UPDATE_USER)
+        },
+        onXpIncrement: {
+            subscribe: () => pubsub.asyncIterator(INCREMENT_XP_FOR_USER)
+        }
     }
 }

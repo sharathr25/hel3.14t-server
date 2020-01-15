@@ -32,15 +32,12 @@ module.exports = `
         incrementXpForUser(uid:String):User!
     }
 
-    type HelpMutation {
-        mutation: String!,
-        payload: HelpRequest!
-    }
-
     type Subscription {
-        onCreateHelp: HelpMutation!,
-        onUpdateHelp: HelpMutation!,
-        onDeleteHelp: HelpMutation!
+        onCreateHelp: HelpRequest!,
+        onUpdateHelp: HelpRequest!,
+        onDeleteHelp: HelpRequest!,
+        onUpdateUser: User!
+        onXpIncrement: User!
     }
 
     type RequestedUser{

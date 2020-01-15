@@ -18,7 +18,7 @@ module.exports = {
                 throw new Error;
             }
         },
-        help: async (args) => {
+        help: async (root,args, context) => {
             try {
                 const { id } = args;
                 const res = await HelpModel.findOne({ _id: id });
@@ -34,7 +34,7 @@ module.exports = {
             try {
                 const { data } = args;
                 const res = await new HelpModel(data).save();
-                pubsub.publish(CREATE_HELP, {onCreateHelp: { mutation: "CREATE",payload: res._doc }}); // onCreateHelp is the resolver in 'Subscription'
+                pubsub.publish(CREATE_HELP, {onCreateHelp: { ...res._doc }}); // onCreateHelp is the resolver in 'Subscription'
                 return res._doc;
             } catch (error) {
                 throw new Error;
@@ -43,19 +43,19 @@ module.exports = {
         updateHelp: async (root, args, context) => {
             const { id, key, value, type = "update", operation = "update" } = args;
             try {
+                let data;
                 if (type === "array") {
-                    let data = await HelpModel.findByIdAndUpdate({ _id: id }, { [`$${operation}`]: { [key]: value } }, { new: true });
+                    data = await HelpModel.findByIdAndUpdate({ _id: id }, { [`$${operation}`]: { [key]: value } }, { new: true });
                     if (key === "usersAccepted") {
                         const { usersAccepted, noPeopleRequired } = data._doc;
                         if (usersAccepted.length === noPeopleRequired) {
                             data = await HelpModel.findByIdAndUpdate({ _id: id }, { "status": "ON_GOING" }, { new: true })
                         }
                     }
-                    pubsub.publish(UPDATE_HELP, {onUpdateHelp: { mutation: "UPDATE", payload: data._doc }});
-                    return data._doc;
+                } else {
+                    data = await HelpModel.findByIdAndUpdate({ _id: id }, { [key]: value }, { new: true });
                 }
-                const data = await HelpModel.findByIdAndUpdate({ _id: id }, { [key]: value }, { new: true });
-                console.log(data);
+                pubsub.publish(UPDATE_HELP, {onUpdateHelp: { ...data._doc }});
                 return data._doc;
             } catch (error) {
                 console.log(error);
@@ -66,7 +66,7 @@ module.exports = {
             const { id } = args;
             try {
                 const res = HelpModel.deleteOne({ _id: id });
-                pubsub.publish(DELETE_HELP, {onDeleteHelp: { mutation: "UPDATE", payload: data._doc }});
+                pubsub.publish(DELETE_HELP, {onDeleteHelp: { ...data._doc }});
                 return res._doc;
             } catch (error) {
                 console.log(error);
