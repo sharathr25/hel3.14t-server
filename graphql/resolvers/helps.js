@@ -7,11 +7,14 @@ const CREATE_HELP = "CREATE_HELP";
 const UPDATE_HELP = "UPDATE_HELP";
 const DELETE_HELP = "DELETE_HELP";
 
+const PER_PAGE = 2;
+
 module.exports = {
     Query: {
-        helps: async () => {
+        helps: async (roor, args, context) => {
+            const { offset } = args;
             try {
-                const data = await HelpModel.find({});
+                const data = await HelpModel.find({}).skip(offset*PER_PAGE).limit(PER_PAGE);
                 return data;
             } catch (error) {
                 console.log(error);

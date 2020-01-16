@@ -3,7 +3,7 @@ module.exports = `
     scalar Any
 
     type Query {
-        helps: [HelpRequest!]!
+        helps(offset:Int!): [HelpRequest!]!
         help(id:String!): HelpRequest!
         user(uid:String!): User!
     }
