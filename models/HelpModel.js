@@ -11,8 +11,8 @@ const helpRequestShema = new Schema({
     mobileNo: { type: String, required: true },
     timeStamp: { type: Date, required: true },
     noPeopleRequired: { type: Number, default: 0 },
-    usersRequested: { type: [{ uid: String, name: String, xp: Number }] },
-    usersAccepted: { type: [{ uid: String, name: String, mobileNo: String }] },
+    usersRequested: { type: [{ uid: String, name: String, stars:{type:Number, default:0 }, xp:{type:Number, default:0} }] },
+    usersAccepted: { type: [{ uid: String, name: String, mobileNo: String, stars:{type:Number, default:0 }, xp:{type:Number, default:0} }] },
     usersRejected: { type: [{ uid: String }] }
 });
 

@@ -30,6 +30,7 @@ module.exports = `
         updateUser(uid:String!, key:String!, value:Any, type:String, operation:String):User!
         deleteUser(uid:String):User!
         incrementXpForUser(uid:String):User!
+        addStarsForuser(uid:String):User!
     }
 
     type Subscription {
@@ -44,7 +45,8 @@ module.exports = `
         _id: ID!
         name: String!,
         uid: String!,
-        xp: Int!
+        xp: Int!,
+        stars: Int!
     }
 
     type AcceptedUser {
@@ -52,6 +54,8 @@ module.exports = `
         name: String!,
         uid: String!,
         mobileNo: String!
+        xp: Int!
+        stars: Int!
     }
 
     type RejectedUser {

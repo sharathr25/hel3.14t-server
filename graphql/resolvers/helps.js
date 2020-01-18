@@ -1,5 +1,8 @@
 const HelpModel = require('../../models/HelpModel');
+const userResolvers = require('./user');
 const { PubSub } = require('apollo-server-express');
+const { Mutation } = userResolvers;
+const { addStarsForuser, incrementXpForUser, updateUser } = Mutation;
 
 const pubsub = new PubSub();
 
@@ -9,19 +12,31 @@ const DELETE_HELP = "DELETE_HELP";
 
 const PER_PAGE = 2;
 
+const addXpToUsersAndNotify = (users) => {
+    users.forEach(user => {
+        const { uid } = user;
+        incrementXpForUser(null, { uid }, null);
+        // notifyUser(uid, "Help Completed ...");
+    });
+}
+
+const notifyUser = (uid, message) => {
+    updateUser(null, { uid, key: "notifications", type: "array", operation: "push", value: { message } });
+}
+
 module.exports = {
     Query: {
-        helps: async (roor, args, context) => {
+        helps: async (root, args, context) => {
             const { offset } = args;
             try {
-                const data = await HelpModel.find({}).skip(offset*PER_PAGE).limit(PER_PAGE);
+                const data = await HelpModel.find({}).skip(offset).limit(PER_PAGE);
                 return data;
             } catch (error) {
                 console.log(error);
                 throw new Error;
             }
         },
-        help: async (root,args, context) => {
+        help: async (root, args, context) => {
             try {
                 const { id } = args;
                 const res = await HelpModel.findOne({ _id: id });
@@ -36,8 +51,12 @@ module.exports = {
         createHelp: async (root, args, context) => {
             try {
                 const { data } = args;
+                const { creator } = data;
                 const res = await new HelpModel(data).save();
-                pubsub.publish(CREATE_HELP, {onCreateHelp: { ...res._doc }}); // onCreateHelp is the resolver in 'Subscription'
+                if (res._doc) {
+                    updateUser(null, { uid: creator, key: "createdHelpRequests", value: res._id, type: "array", operation: "push" }, null);
+                }
+                pubsub.publish(CREATE_HELP, { onCreateHelp: { ...res._doc } }); // onCreateHelp is the resolver in 'Subscription'
                 return res._doc;
             } catch (error) {
                 throw new Error;
@@ -48,17 +67,33 @@ module.exports = {
             try {
                 let data;
                 if (type === "array") {
-                    data = await HelpModel.findByIdAndUpdate({ _id: id }, { [`$${operation}`]: { [key]: value } }, { new: true });
-                    if (key === "usersAccepted") {
-                        const { usersAccepted, noPeopleRequired } = data._doc;
-                        if (usersAccepted.length === noPeopleRequired) {
-                            data = await HelpModel.findByIdAndUpdate({ _id: id }, { "status": "ON_GOING" }, { new: true })
+                    if (operation === "update") {
+                        const uid = Object.keys(value)[0];
+                        const starsGivenByUser = value[uid].stars;
+                        data = await HelpModel.findByIdAndUpdate({ _id: id }, { "$set": { [`${key}.$[elem].stars`]: starsGivenByUser } }, { new: true, arrayFilters: [{ "elem.uid": { $eq: uid } }] });
+                        if (data._doc) {
+                            addStarsForuser(null, { uid, starsGivenByUser }, null);
+                        }
+                    } else {
+                        data = await HelpModel.findByIdAndUpdate({ _id: id }, { [`$${operation}`]: { [key]: value } }, { new: true });
+                        if (key == "usersRequested") {
+                            // const  { uid } = value;
+                            // notifyUser(uid, "Helper willing to help you ...")
+                        } else if (key === "usersAccepted") {
+                            const { usersAccepted, noPeopleRequired } = data._doc;
+                            if (usersAccepted.length === noPeopleRequired) {
+                                data = await HelpModel.findByIdAndUpdate({ _id: id }, { "status": "ON_GOING" }, { new: true });
+                            }
                         }
                     }
                 } else {
                     data = await HelpModel.findByIdAndUpdate({ _id: id }, { [key]: value }, { new: true });
+                    if (data._doc && data._doc.status === "COMPLETED") {
+                        const { usersAccepted } = data._doc;
+                        addXpToUsersAndNotify(usersAccepted);
+                    }
                 }
-                pubsub.publish(UPDATE_HELP, {onUpdateHelp: { ...data._doc }});
+                pubsub.publish(UPDATE_HELP, { onUpdateHelp: { ...data._doc } });
                 return data._doc;
             } catch (error) {
                 console.log(error);
@@ -69,7 +104,7 @@ module.exports = {
             const { id } = args;
             try {
                 const res = HelpModel.deleteOne({ _id: id });
-                pubsub.publish(DELETE_HELP, {onDeleteHelp: { ...data._doc }});
+                pubsub.publish(DELETE_HELP, { onDeleteHelp: { ...data._doc } });
                 return res._doc;
             } catch (error) {
                 console.log(error);

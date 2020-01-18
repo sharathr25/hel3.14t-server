@@ -7,6 +7,7 @@ const XP_INCREMENT_PER_HELP = 10;
 
 const UPDATE_USER = "UPDATE_USER";
 const INCREMENT_XP_FOR_USER = "INCREMENT_XP_FOR_USER";
+const INCREMENT_STARS_FOR_USER = "INCREMENT_STARS_FOR_USER";
 
 module.exports = {
     Query: {
@@ -41,7 +42,7 @@ module.exports = {
                 } else {
                     user = await User.findOneAndUpdate({ uid }, { [key]: value }, { new: true });
                 }
-                pubsub.publish(UPDATE_USER, { onUpdateUser: { ...user._doc } })
+                pubsub.publish(UPDATE_USER, { onUpdateUser: { ...user._doc } });
                 return user._doc;
             } catch (error) {
                 console.log(error)
@@ -52,9 +53,22 @@ module.exports = {
             const { uid } = args;
             try {
                 let user = await User.findOne({ uid });
-                const xp = user._doc.xp;
+                const {xp} = user._doc;
                 user = await User.findOneAndUpdate({ uid }, { xp: xp + XP_INCREMENT_PER_HELP }, { new: true });
-                pubsub.publish(INCREMENT_XP_FOR_USER, { onXpIncrement: { ...user._doc } })
+                pubsub.publish(INCREMENT_XP_FOR_USER, { onXpIncrement: { ...user._doc } });
+                return user._doc;
+            } catch (error) {
+                console.log(error);
+                throw new error;
+            }
+        },
+        addStarsForuser: async (root, args, context) => {
+            const { uid, starsGivenByUser } = args;
+            try {
+                let user = await User.findOne({ uid });
+                const {stars} = user._doc;
+                user = await User.findOneAndUpdate({ uid }, { stars: stars + starsGivenByUser }, { new: true });
+                pubsub.publish(INCREMENT_XP_FOR_USER, { onXpIncrement: { ...user._doc } });
                 return user._doc;
             } catch (error) {
                 console.log(error);
