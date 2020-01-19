@@ -16,12 +16,13 @@ const addXpToUsersAndNotify = (users) => {
     users.forEach(user => {
         const { uid } = user;
         incrementXpForUser(null, { uid }, null);
-        // notifyUser(uid, "Help Completed ...");
+        notifyUser(uid, "Help Completed ...");
     });
 }
 
+// disabling notifications for user
 const notifyUser = (uid, message) => {
-    updateUser(null, { uid, key: "notifications", type: "array", operation: "push", value: { message } });
+    //updateUser(null, { uid, key: "notifications", type: "array", operation: "push", value: { message } });
 }
 
 module.exports = {
@@ -77,13 +78,16 @@ module.exports = {
                     } else {
                         data = await HelpModel.findByIdAndUpdate({ _id: id }, { [`$${operation}`]: { [key]: value } }, { new: true });
                         if (key == "usersRequested") {
-                            // const  { uid } = value;
-                            // notifyUser(uid, "Helper willing to help you ...")
+                            const  { uid } = value;
+                            notifyUser(uid, "Helper willing to help you ...")
                         } else if (key === "usersAccepted") {
                             const { usersAccepted, noPeopleRequired } = data._doc;
+                            data = await HelpModel.findByIdAndUpdate({ _id: id }, { "$pull": { "usersRequested": { uid: value.uid } } }, { new: true });
                             if (usersAccepted.length === noPeopleRequired) {
                                 data = await HelpModel.findByIdAndUpdate({ _id: id }, { "status": "ON_GOING" }, { new: true });
                             }
+                        } else if (key === "usersRejected") {
+                            data = await HelpModel.findByIdAndUpdate({ _id: id }, { "$pull": { "usersRequested": {uid:value.uid} } }, { new: true });
                         }
                     }
                 } else {

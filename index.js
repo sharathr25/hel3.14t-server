@@ -4,10 +4,19 @@ const { createServer } = require('http');
 const mongoose = require('mongoose');
 const schema = require('./graphql/shemas');
 const resolvers = require('./graphql/resolvers');
+const bodyParser = require('body-parser');
 
 const PORT = 4000;
 
 const app = express();
+
+app.use(bodyParser.json());
+
+// app.use((req, res, next) => {
+//     console.count("****************************************");
+//     console.log(req.body);
+//     next();
+// });
 
 const server = new ApolloServer({
     typeDefs: gql`${schema}`,
