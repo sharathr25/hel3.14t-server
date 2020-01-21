@@ -7,19 +7,17 @@ const resolvers = require('./graphql/resolvers');
 const bodyParser = require('body-parser');
 const config = require('./config')[process.env.ENV || "dev"];
 
-const { mongoUrl,port } = config;
-
-const PORT = port || 4000;
+const { mongoUrl } = config;
 
 const app = express();
 
 app.use(bodyParser.json());
 
-// app.use((req, res, next) => {
-//     console.count("****************************************");
-//     console.log(req.body);
-//     next();
-// });
+app.use((req, res, next) => {
+    console.count("****************************************");
+    console.log(req.body);
+    next();
+});
 
 const server = new ApolloServer({
     typeDefs: gql`${schema}`,
