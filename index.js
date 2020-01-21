@@ -32,7 +32,7 @@ const ws = createServer(app);
 
 server.installSubscriptionHandlers(ws);
 
-ws.listen({port:PORT}, () => {
+ws.listen({port:process.env.PORT || 4000}, () => {
     console.log(`Apollo Server is now running on http://localhost:${PORT}`);
 });
 
