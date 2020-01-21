@@ -5,8 +5,11 @@ const mongoose = require('mongoose');
 const schema = require('./graphql/shemas');
 const resolvers = require('./graphql/resolvers');
 const bodyParser = require('body-parser');
+const config = require('./config')[process.env.ENV || "dev"];
 
-const PORT = 4000;
+const { mongoUrl,port } = config;
+
+const PORT = port || 4000;
 
 const app = express();
 
@@ -33,4 +36,8 @@ ws.listen({port:PORT}, () => {
     console.log(`Apollo Server is now running on http://localhost:${PORT}`);
 });
 
-mongoose.connect('mongodb://localhost:27017/helpApp', { useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false });
+mongoose.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false }).then(() => {
+    console.log("DB connencted");
+}).catch((err) => {
+    console.log(err);
+});
