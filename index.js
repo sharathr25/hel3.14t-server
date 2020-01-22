@@ -31,7 +31,7 @@ const ws = createServer(app);
 server.installSubscriptionHandlers(ws);
 
 ws.listen({port:process.env.PORT || 4000}, () => {
-    console.log(`Apollo Server is now running on ${process.env.PORT}`);
+    console.log(`Apollo Server is now running on ${process.env.PORT || 4000}`);
 });
 
 mongoose.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false }).then(() => {
