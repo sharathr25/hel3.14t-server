@@ -67,8 +67,8 @@ module.exports = `
         creator: String!
         mobileNo: String!
         name: String!
-        latitude: String!
-        longitude: String!
+        latitude: Float!
+        longitude: Float!
         timeStamp: Date!
         noPeopleRequired: Int!
         status: String!
