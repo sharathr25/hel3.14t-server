@@ -80,7 +80,8 @@ module.exports = `
 
     type Notification {
         _id: ID!
-        message: String!
+        message: String!,
+        timeStamp: Date
     }
 
     type User {

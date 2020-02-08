@@ -13,16 +13,15 @@ const DELETE_HELP = "DELETE_HELP";
 const PER_PAGE = 2;
 
 const addXpToUsersAndNotify = (users) => {
-    users.forEach(user => {
+    users.forEach(async user => {
         const { uid } = user;
         incrementXpForUser(null, { uid }, null);
-        notifyUser(uid, "Help Completed ...");
+        await notifyUser(uid, "Help Completed ...");
     });
 }
 
-// disabling notifications for user
-const notifyUser = (uid, message) => {
-    //updateUser(null, { uid, key: "notifications", type: "array", operation: "push", value: { message } });
+const notifyUser = async (uid, message) => {
+    await updateUser(null, { uid, key: "notifications", type: "array", operation: "push", value: { message, timeStamp: new Date().getTime() } });
 }
 
 module.exports = {
@@ -78,8 +77,8 @@ module.exports = {
                     } else {
                         data = await HelpModel.findByIdAndUpdate({ _id: id }, { [`$${operation}`]: { [key]: value } }, { new: true });
                         if (key == "usersRequested") {
-                            const  { uid } = value;
-                            notifyUser(uid, "Helper willing to help you ...")
+                            const { uid } = value;
+                            await notifyUser(uid, "Helper willing to help you ...")
                         } else if (key === "usersAccepted") {
                             const { usersAccepted, noPeopleRequired } = data._doc;
                             data = await HelpModel.findByIdAndUpdate({ _id: id }, { "$pull": { "usersRequested": { uid: value.uid } } }, { new: true });
@@ -87,7 +86,7 @@ module.exports = {
                                 data = await HelpModel.findByIdAndUpdate({ _id: id }, { "status": "ON_GOING" }, { new: true });
                             }
                         } else if (key === "usersRejected") {
-                            data = await HelpModel.findByIdAndUpdate({ _id: id }, { "$pull": { "usersRequested": {uid:value.uid} } }, { new: true });
+                            data = await HelpModel.findByIdAndUpdate({ _id: id }, { "$pull": { "usersRequested": { uid: value.uid } } }, { new: true });
                         }
                     }
                 } else {
