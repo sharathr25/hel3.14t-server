@@ -75,6 +75,11 @@ module.exports = {
                             addStarsForuser(null, { uid, starsGivenByUser }, null);
                         }
                     } else {
+                        if (key === "usersRequested" || key === "usersAccepted") {
+                            const data = await HelpModel.findById({ _id: id });
+                            console.log(data._doc[key].some((user => user.uid === value.uid)));
+                            if (data._doc[key].some((user => user.uid === value.uid))) return data._doc;
+                        }
                         data = await HelpModel.findByIdAndUpdate({ _id: id }, { [`$${operation}`]: { [key]: value } }, { new: true });
                         if (key == "usersRequested") {
                             const { uid } = value;
