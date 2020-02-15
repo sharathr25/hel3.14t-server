@@ -29,7 +29,7 @@ module.exports = {
         helps: async (root, args, context) => {
             const { offset } = args;
             try {
-                const data = await HelpModel.find({}).skip(offset).limit(PER_PAGE);
+                const data = await HelpModel.find({ status: "REQUESTED" }).skip(offset).limit(PER_PAGE);
                 return data;
             } catch (error) {
                 console.log(error);
