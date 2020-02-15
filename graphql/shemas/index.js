@@ -90,6 +90,7 @@ module.exports = `
         name: String!,
         stars: Int!,
         notifications: [Notification!],
-        createdHelpRequests: [String!]
+        createdHelpRequests: [String!],
+        helpedHelpRequests: [String!],
     }
 `;

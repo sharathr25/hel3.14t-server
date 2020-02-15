@@ -77,7 +77,6 @@ module.exports = {
                     } else {
                         if (key === "usersRequested" || key === "usersAccepted") {
                             const data = await HelpModel.findById({ _id: id });
-                            console.log(data._doc[key].some((user => user.uid === value.uid)));
                             if (data._doc[key].some((user => user.uid === value.uid))) return data._doc;
                         }
                         data = await HelpModel.findByIdAndUpdate({ _id: id }, { [`$${operation}`]: { [key]: value } }, { new: true });
@@ -85,8 +84,10 @@ module.exports = {
                             const { uid } = value;
                             await notifyUser(uid, "Helper willing to help you ...")
                         } else if (key === "usersAccepted") {
-                            const { usersAccepted, noPeopleRequired } = data._doc;
+                            const { uid } = value;
+                            const { usersAccepted, noPeopleRequired,_id } = data._doc;
                             data = await HelpModel.findByIdAndUpdate({ _id: id }, { "$pull": { "usersRequested": { uid: value.uid } } }, { new: true });
+                            await updateUser(null, { uid, key: "helpedHelpRequests", value: _id, operation: "push", type: "array" });
                             if (usersAccepted.length === noPeopleRequired) {
                                 data = await HelpModel.findByIdAndUpdate({ _id: id }, { "status": "ON_GOING" }, { new: true });
                             }
