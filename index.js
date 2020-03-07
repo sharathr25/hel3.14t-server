@@ -13,11 +13,11 @@ const app = express();
 
 app.use(bodyParser.json());
 
-app.use((req, res, next) => {
-    console.count("****************************************");
-    console.log(req.body);
-    next();
-});
+// app.use((req, res, next) => {
+//     console.count("****************************************");
+//     console.log(req.body);
+//     next();
+// });
 
 const server = new ApolloServer({
     typeDefs: gql`${schema}`,
