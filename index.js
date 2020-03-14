@@ -6,6 +6,9 @@ const schema = require('./graphql/shemas');
 const resolvers = require('./graphql/resolvers');
 const bodyParser = require('body-parser');
 const config = require('./config')[process.env.ENV || "dev"];
+const jwt = require('jsonwebtoken')
+const jwkToPem = require('jwk-to-pem');
+const jwk = require('./jsonWebKey.json');
 
 const { mongoUrl } = config;
 
@@ -17,11 +20,32 @@ app.use(bodyParser.json());
 //     console.count("****************************************");
 //     console.log(req.body);
 //     next();
-// });
+// })
+
+const isValid = (req) => {
+    let isValid = false;
+    const { headers } = req;
+    const { authorization } = headers;
+    if(authorization) {
+        const token = authorization.split(' ')[1];
+        const pem = jwkToPem(jwk.keys[1]);
+        try {
+            const decodedToken = jwt.verify(token, pem, { algorithms: ['RS256'] });
+            if(decodedToken) {
+                isValid = true;
+            }
+        } catch (error) {
+            console.log(error);
+        } 
+    } 
+
+    return { isValid };
+}
 
 const server = new ApolloServer({
     typeDefs: gql`${schema}`,
     resolvers,
+    context: ({ req }) => isValid(req)
 })
 
 server.applyMiddleware({app});
