@@ -10,6 +10,7 @@ module.exports = `
 
     input HelpRequestInput {
         creator: String!
+        creatorName: String!
         mobileNo: String!
         name: String!
         latitude: Float!
@@ -65,6 +66,7 @@ module.exports = `
     type HelpRequest {
         _id: ID!
         creator: String!
+        creatorName: String!
         mobileNo: String!
         name: String!
         latitude: Float!
