@@ -46,6 +46,7 @@ module.exports = `
         _id: ID!
         name: String!,
         uid: String!,
+        mobileNo: String!,
         xp: Int!,
         stars: Int!
     }
