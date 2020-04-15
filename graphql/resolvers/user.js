@@ -13,6 +13,10 @@ const INCREMENT_STARS_FOR_USER = "INCREMENT_STARS_FOR_USER";
 module.exports = {
     Query: {
         user: async (root, args, context) => {
+            console.log(context)
+            // if(!context.isValid) {
+            //     throw new Error("Unauthorised")
+            // }
             const { uid } = args;
             try {
                 const user = await User.findOne({ uid });
@@ -48,9 +52,7 @@ module.exports = {
             try {
                 let user;
                 if (type === "array") {
-                    console.log(args);
                     user = await User.findOneAndUpdate({ uid }, { [`$${operation}`]: { [key]: value } }, { new: true });
-                    console.log(user._doc);
                 } else {
                     user = await User.findOneAndUpdate({ uid }, { [key]: value }, { new: true });
                 }
