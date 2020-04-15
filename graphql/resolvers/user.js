@@ -4,7 +4,7 @@ const { PubSub } = require('apollo-server-express');
 const pubsub = new PubSub();
 
 const XP_INCREMENT_PER_HELP = 10;
-const NUMBER_OF_TOP_HELPERS = 100;
+const NUMBER_OF_TOP_HELPERS = 50;
 
 const UPDATE_USER = "UPDATE_USER";
 const INCREMENT_XP_FOR_USER = "INCREMENT_XP_FOR_USER";
@@ -28,7 +28,7 @@ module.exports = {
         },
         topHelpers: async (root, args, context) => {
             try {
-                const topHelpers = await User.find({}).sort({ xp: -1, stars: -1 })
+                const topHelpers = await User.find({}).sort({ xp: -1, stars: -1 }).limit(NUMBER_OF_TOP_HELPERS)
                 return topHelpers;
             } catch (error) {
                 console.log(error);
