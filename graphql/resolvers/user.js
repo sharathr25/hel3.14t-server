@@ -13,7 +13,6 @@ const INCREMENT_STARS_FOR_USER = "INCREMENT_STARS_FOR_USER";
 module.exports = {
     Query: {
         user: async (root, args, context) => {
-            console.log(context)
             // if(!context.isValid) {
             //     throw new Error("Unauthorised")
             // }
