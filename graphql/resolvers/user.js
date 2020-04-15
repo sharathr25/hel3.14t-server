@@ -4,6 +4,7 @@ const { PubSub } = require('apollo-server-express');
 const pubsub = new PubSub();
 
 const XP_INCREMENT_PER_HELP = 10;
+const NUMBER_OF_TOP_HELPERS = 100;
 
 const UPDATE_USER = "UPDATE_USER";
 const INCREMENT_XP_FOR_USER = "INCREMENT_XP_FOR_USER";
@@ -21,12 +22,21 @@ module.exports = {
                 throw new Error;
             }
         },
+        topHelpers: async (root, args, context) => {
+            try {
+                const topHelpers = await User.find({}).sort({ xp: -1, stars: -1 })
+                return topHelpers;
+            } catch (error) {
+                console.log(error);
+                throw new Error(error);
+            }
+        }
     },
     Mutation: {
         createUser: async (root, args, context) => {
-            const { uid } = args;
+            const { uid, username } = args;
             try {
-                const user = await new User({ uid }).save();
+                const user = await new User({ uid, username }).save();
                 return user._doc;
             } catch (error) {
                 console.log(error);

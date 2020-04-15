@@ -6,6 +6,7 @@ module.exports = `
         helps(offset:Int!): [HelpRequest!]!
         help(id:String!): HelpRequest!
         user(uid:String!): User!
+        topHelpers: [User!]!
     }
 
     input HelpRequestInput {
@@ -27,7 +28,7 @@ module.exports = `
         createHelp(data:HelpRequestInput!):HelpRequest!
         updateHelp(id:String!, key:String!, value:Any, type:String, operation:String):HelpRequest!
         deleteHelp(id:String!):HelpRequest!
-        createUser(uid:String):User!
+        createUser(uid:String!, username: String!):User!
         updateUser(uid:String!, key:String!, value:Any, type:String, operation:String):User!
         deleteUser(uid:String):User!
         incrementXpForUser(uid:String):User!
@@ -89,6 +90,7 @@ module.exports = `
 
     type User {
         uid: String!,
+        username: String!,
         xp: Int!,
         name: String!,
         stars: Int!,
