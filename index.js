@@ -25,19 +25,21 @@ app.use(bodyParser.json());
 
 const isValid = (req) => {
     let isValid = false;
-    const { headers } = req;
-    const { authorization } = headers;
-    if(authorization) {
-        const token = authorization.split(' ')[1];
-        const pem = jwkToPem(jwk.keys[1]);
-        try {
-            const decodedToken = jwt.verify(token, pem, { algorithms: ['RS256'] });
-            if(decodedToken) {
-                isValid = true;
-            }
-        } catch (error) {
-            console.log(error);
-        } 
+    if(req) {
+        const { headers } = req;
+        const { authorization } = headers;
+        if(authorization) {
+            const token = authorization.split(' ')[1];
+            const pem = jwkToPem(jwk.keys[1]);
+            try {
+                const decodedToken = jwt.verify(token, pem, { algorithms: ['RS256'] });
+                if(decodedToken) {
+                    isValid = true;
+                }
+            } catch (error) {
+                console.log(error);
+            } 
+        }
     } 
 
     return { isValid };
