@@ -21,7 +21,6 @@ app.use(bodyParser.json());
 //     console.log(req.body);
 //     next();
 // });
-// })
 
 const isValid = (req) => {
     let isValid = false;
@@ -48,7 +47,7 @@ const isValid = (req) => {
 const server = new ApolloServer({
     typeDefs: gql`${schema}`,
     resolvers,
-    context: ({ req }) => isValid(req)
+    context: ({ req }) => req
 })
 
 server.applyMiddleware({app});

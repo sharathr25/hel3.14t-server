@@ -96,10 +96,12 @@ module.exports = {
                         }
                     }
                 } else {
-                    data = await HelpModel.findByIdAndUpdate({ _id: id }, { [key]: value }, { new: true });
+                    data = await HelpModel.findByIdAndUpdate({ _id: id }, key !== "" ? { [key]: value } : value , { new: true });
+                    const { usersAccepted } = data._doc;
                     if (data._doc && data._doc.status === "COMPLETED") {
-                        const { usersAccepted } = data._doc;
                         addXpToUsersAndNotify(usersAccepted);
+                    } else if(data._doc && data._doc.status === "CANCELLED") {
+                        data = await HelpModel.findByIdAndUpdate({ _id: id }, { "usersAccepted": [] , "usersRequested" : [] }, { new: true });
                     }
                 }
                 pubsub.publish(UPDATE_HELP, { onUpdateHelp: { ...data._doc } });
