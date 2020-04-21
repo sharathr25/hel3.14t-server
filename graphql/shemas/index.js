@@ -45,7 +45,7 @@ module.exports = `
 
     type RequestedUser{
         _id: ID!
-        name: String!,
+        username: String!,
         uid: String!,
         mobileNo: String!,
         xp: Int!,
@@ -54,7 +54,7 @@ module.exports = `
 
     type AcceptedUser {
         _id: ID!
-        name: String!,
+        username: String!,
         uid: String!,
         mobileNo: String!
         xp: Int!
