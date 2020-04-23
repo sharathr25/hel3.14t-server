@@ -59,6 +59,7 @@ module.exports = `
         mobileNo: String!
         xp: Int!
         stars: Int!
+        starsForCreator: Int
     }
 
     type RejectedUser {

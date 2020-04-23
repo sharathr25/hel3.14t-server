@@ -27,8 +27,23 @@ const notifyUser = async (uid, message) => {
 const updateArrayTypeInHelpModel = async (args) => {
     const { id, key, value } = args;
     const uid = Object.keys(value)[0];
-    const starsGivenByUser = value[uid].stars;
-    data = await HelpModel.findByIdAndUpdate({ _id: id }, { "$set": { [`${key}.$[elem].stars`]: starsGivenByUser } }, { new: true, arrayFilters: [{ "elem.uid": { $eq: uid } }] });
+    let keyForUpdate = ""
+    let userId = ""
+    starsGivenByUser = 0
+    if(value[uid].stars) {
+        keyForUpdate = "stars"
+        userId = value[uid];  
+        starsGivenByUser = value[uid].stars;
+    } else if(value[uid].starsForCreator) {
+        keyForUpdate = "starsForCreator"
+        userId = value["creatorUid"]
+        starsGivenByUser = value[uid].starsForCreator;
+    }
+    data = await HelpModel.findByIdAndUpdate(
+        { _id: id }, 
+        { "$set": { [`${key}.$[elem].${keyForUpdate}`]: starsGivenByUser } },
+        { new: true, arrayFilters: [{ "elem.uid": { $eq: uid } }] }
+    );
     if (data._doc) {
         addStarsForuser(null, { uid, starsGivenByUser }, null);
     }
