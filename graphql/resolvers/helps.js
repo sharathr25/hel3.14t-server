@@ -45,7 +45,7 @@ const updateArrayTypeInHelpModel = async (args) => {
         { new: true, arrayFilters: [{ "elem.uid": { $eq: uid } }] }
     );
     if (data._doc) {
-        addStarsForuser(null, { uid, starsGivenByUser }, null);
+        addStarsForuser(null, { uid: userId, starsGivenByUser }, null);
     }
     return data;
 }
