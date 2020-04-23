@@ -24,6 +24,19 @@ const notifyUser = async (uid, message) => {
     await updateUser(null, { uid, key: "notifications", type: "array", operation: "push", value: { message, timeStamp: new Date().getTime() } });
 }
 
+const updateArrayTypeInHelpModel = async (args) => {
+    const { id, key, value } = args;
+    const uid = Object.keys(value)[0];
+    const starsGivenByUser = value[uid].stars;
+    data = await HelpModel.findByIdAndUpdate({ _id: id }, { "$set": { [`${key}.$[elem].stars`]: starsGivenByUser } }, { new: true, arrayFilters: [{ "elem.uid": { $eq: uid } }] });
+    if (data._doc) {
+        addStarsForuser(null, { uid, starsGivenByUser }, null);
+    }
+    return data;
+}
+
+const isUserAlreadyInUsers = (users, uid) => users.some((user) => user.uid === uid)
+
 module.exports = {
     Query: {
         helps: async (root, args, context) => {
@@ -68,39 +81,42 @@ module.exports = {
                 let data;
                 if (type === "array") {
                     if (operation === "update") {
-                        const uid = Object.keys(value)[0];
-                        const starsGivenByUser = value[uid].stars;
-                        data = await HelpModel.findByIdAndUpdate({ _id: id }, { "$set": { [`${key}.$[elem].stars`]: starsGivenByUser } }, { new: true, arrayFilters: [{ "elem.uid": { $eq: uid } }] });
-                        if (data._doc) {
-                            addStarsForuser(null, { uid, starsGivenByUser }, null);
-                        }
-                    } else {
+                        data = await updateArrayTypeInHelpModel(args)
+                    } else if(operation === "push"){
+                        // pre push
                         if (key === "usersRequested" || key === "usersAccepted") {
                             const data = await HelpModel.findById({ _id: id });
-                            if (data._doc[key].some((user => user.uid === value.uid))) return data._doc;
+                            if(isUserAlreadyInUsers(data._doc[key], value.uid)) return data._doc;
                         }
-                        data = await HelpModel.findByIdAndUpdate({ _id: id }, { [`$${operation}`]: { [key]: value } }, { new: true });
+
+                        // push
+                        data = await HelpModel.findByIdAndUpdate({ _id: id }, { [`$push`]: { [key]: value } }, { new: true });
+                        
+                        // post push
+                        const { usersAccepted, noPeopleRequired, _id } = data._doc;
                         if (key == "usersRequested") {
-                            const { uid } = value;
-                            await notifyUser(uid, "Helper willing to help you ...")
-                        } else if (key === "usersAccepted") {
-                            const { uid } = value;
-                            const { usersAccepted, noPeopleRequired,_id } = data._doc;
-                            data = await HelpModel.findByIdAndUpdate({ _id: id }, { "$pull": { "usersRequested": { uid: value.uid } } }, { new: true });
-                            await updateUser(null, { uid, key: "helpedHelpRequests", value: _id, operation: "push", type: "array" });
-                            if (usersAccepted.length === noPeopleRequired) {
-                                data = await HelpModel.findByIdAndUpdate({ _id: id }, { "status": "ON_GOING" }, { new: true });
+                            await notifyUser(value.uid, "Helper willing to help you ...")
+                            await updateUser(null, { uid: value.uid, key: "helpedHelpRequests", value: _id, operation: "push", type: "array" });
+                        } else if (key === "usersAccepted" || key === "usersRejected") {
+                            if(key === "usersAccepted") {
+                                if (usersAccepted.length === noPeopleRequired) {
+                                    data = await HelpModel.findByIdAndUpdate({ _id: id }, { "status": "ON_GOING" }, { new: true });
+                                }
                             }
-                        } else if (key === "usersRejected") {
-                            data = await HelpModel.findByIdAndUpdate({ _id: id }, { "$pull": { "usersRequested": { uid: value.uid } } }, { new: true });
+                            data = await HelpModel.findByIdAndUpdate({ _id: id }, { "$pull": { "usersRequested": { uid: value.uid } } }, { new: true });   
                         }
                     }
                 } else {
+                    // update
                     data = await HelpModel.findByIdAndUpdate({ _id: id }, key !== "" ? { [key]: value } : value , { new: true });
+
+                    // post update
                     const { usersAccepted } = data._doc;
                     if (data._doc && data._doc.status === "COMPLETED") {
                         addXpToUsersAndNotify(usersAccepted);
                     } else if(data._doc && data._doc.status === "CANCELLED") {
+                        // TODO - Need to send notifications for users who are accepted
+                        // TODO - Need to send notifications for users who are requested
                         data = await HelpModel.findByIdAndUpdate({ _id: id }, { "usersAccepted": [] , "usersRequested" : [] }, { new: true });
                     }
                 }
