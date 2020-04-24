@@ -66,6 +66,10 @@ module.exports = `
         uid: String!
     }
 
+    type CancelledUser {
+        uid: String!
+    }
+
     type HelpRequest {
         _id: ID!
         creator: String!
@@ -81,6 +85,7 @@ module.exports = `
         usersAccepted : [AcceptedUser!]!
         usersRequested: [RequestedUser!]!
         usersRejected: [RejectedUser!]!
+        usersCancelled: [CancelledUser!]!
     }
 
     type Notification {

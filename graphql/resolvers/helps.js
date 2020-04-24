@@ -120,6 +120,11 @@ module.exports = {
                             }
                             data = await HelpModel.findByIdAndUpdate({ _id: id }, { "$pull": { "usersRequested": { uid: value.uid } } }, { new: true });   
                         }
+                    } else if(operation === "pull") {
+                        // when person who is willing to help, changes his mind and cancells
+                        // TODO : Extract this to new resolver function
+                        data = await HelpModel.findByIdAndUpdate({ _id: id }, { [`$pull`]: { [key]: value } }, { new: true });
+                        data = await HelpModel.findByIdAndUpdate({ _id: id }, { [`$push`]: { "usersCancelled": value } }, { new: true });
                     }
                 } else {
                     // update

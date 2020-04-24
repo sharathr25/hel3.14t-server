@@ -35,7 +35,8 @@ const helpRequestShema = new Schema({
             }
         ] 
     },
-    usersRejected: { type: [{ uid: String }] }
+    usersRejected: { type: [{ uid: String }] },
+    usersCancelled: { type : [ { uid: String }]}
 });
 
 module.exports = mongoose.model('HelpRequest', helpRequestShema);
