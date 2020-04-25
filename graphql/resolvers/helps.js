@@ -29,10 +29,10 @@ const updateArrayTypeInHelpModel = async (args) => {
     const uid = Object.keys(value)[0];
     let keyForUpdate = ""
     let userId = ""
-    starsGivenByUser = 0
+    let starsGivenByUser = 0
     if(value[uid].stars) {
         keyForUpdate = "stars"
-        userId = value[uid];  
+        userId = uid;  
         starsGivenByUser = value[uid].stars;
     } else if(value[uid].starsForCreator) {
         keyForUpdate = "starsForCreator"
