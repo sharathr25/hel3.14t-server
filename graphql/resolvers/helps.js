@@ -137,7 +137,10 @@ module.exports = {
                     } else if(data._doc && data._doc.status === "CANCELLED") {
                         // TODO - Need to send notifications for users who are accepted
                         // TODO - Need to send notifications for users who are requested
-                        data = await HelpModel.findByIdAndUpdate({ _id: id }, { "usersAccepted": [] , "usersRequested" : [] }, { new: true });
+                        data = await HelpModel.findByIdAndUpdate(
+                            { _id: id }, 
+                            { "usersAccepted": [] , "usersRequested": [], "usersCancelled": [], "usersRejected": [] }, 
+                            { new: true });
                     }
                 }
                 pubsub.publish(UPDATE_HELP, { onUpdateHelp: { ...data._doc } });
