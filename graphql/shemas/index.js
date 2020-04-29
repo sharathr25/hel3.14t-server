@@ -103,5 +103,6 @@ module.exports = `
         notifications: [Notification!],
         createdHelpRequests: [String!],
         helpedHelpRequests: [String!],
+        totalRaters: Int!
     }
 `;
