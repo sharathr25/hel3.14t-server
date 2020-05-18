@@ -91,7 +91,9 @@ module.exports = `
     type Notification {
         _id: ID!
         message: String!,
-        timeStamp: Date
+        timeStamp: Date,
+        type: String,
+        idOfHelpRequest: String
     }
 
     type User {

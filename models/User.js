@@ -7,7 +7,7 @@ const UserShema = new Schema({
     username: { type: String, required: true },
     createdHelpRequests: [{ type: Schema.Types.ObjectId, ref: 'HelpRequest' }],
     helpedHelpRequests: [{ type: Schema.Types.ObjectId, ref: 'HelpRequest' }],
-    notifications: [{ message: { type: String } , timeStamp: { type: Number }}],
+    notifications: [{ message: { type: String } , timeStamp: { type: Number }, type: { type: String, default: "" }, idOfHelpRequest: { type: String, default: "" }}],
     xp: { type: Number, default: 0 },
     stars: { type: Number, default: 0 },
     totalRaters: { type: Number, default: 0}

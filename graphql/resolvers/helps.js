@@ -20,8 +20,16 @@ const addXpToUsersAndNotify = (users) => {
     });
 }
 
-const notifyUser = async (uid, message) => {
-    await updateUser(null, { uid, key: "notifications", type: "array", operation: "push", value: { message, timeStamp: new Date().getTime() } });
+const notifyUser = async (uid, message, type = "", idOfHelpRequest = "") => {
+    await updateUser(null, 
+        { 
+            uid, 
+            key: "notifications", 
+            type: "array", 
+            operation: "push", 
+            value: { message, timeStamp: new Date().getTime(), type, idOfHelpRequest 
+        } 
+    });
 }
 
 const updateArrayTypeInHelpModel = async (args) => {
@@ -110,13 +118,16 @@ module.exports = {
                         // post push
                         const { usersAccepted, noPeopleRequired, _id } = data._doc;
                         if (key == "usersRequested") {
-                            await notifyUser(value.uid, "Helper willing to help you ...")
+                            await notifyUser(value.uid, "Helper willing to help you ...", "HELPER_REQUESTED", _id)
                             await updateUser(null, { uid: value.uid, key: "helpedHelpRequests", value: _id, operation: "push", type: "array" });
                         } else if (key === "usersAccepted" || key === "usersRejected") {
                             if(key === "usersAccepted") {
+                                await notifyUser(value.uid, "you got accepted", "HELPER_ACCEPTED", _id)
                                 if (usersAccepted.length === noPeopleRequired) {
                                     data = await HelpModel.findByIdAndUpdate({ _id: id }, { "status": "ON_GOING" }, { new: true });
                                 }
+                            } else if(key === "usersRejected") {
+                                await notifyUser(value.uid, "you got rejected sorry...")
                             }
                             data = await HelpModel.findByIdAndUpdate({ _id: id }, { "$pull": { "usersRequested": { uid: value.uid } } }, { new: true });   
                         }
