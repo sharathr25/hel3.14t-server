@@ -3,6 +3,22 @@ const userResolvers = require('./user');
 const { PubSub } = require('apollo-server-express');
 const { Mutation } = userResolvers;
 const { addStarsForuser, incrementXpForUser, updateUser } = Mutation;
+const { NOTIFICATION_TYPES, HELP_REQUEST_STATUS } = require('../../constants');
+
+const { 
+    HELPER_REQUESTED,
+    HELPER_ACCEPTED,
+    HELPER_CANCELLED,
+    REQUESTER_CANCELLED,
+    REQUESTER_REJECTED
+} = NOTIFICATION_TYPES;
+
+const {
+    REQUESTED,
+    ON_GOING,
+    CANCELLED,
+    COMPLETED
+} = HELP_REQUEST_STATUS
 
 const pubsub = new PubSub();
 
@@ -65,7 +81,7 @@ module.exports = {
         helps: async (root, args, context) => {
             const { offset } = args;
             try {
-                const data = await HelpModel.find({ status: "REQUESTED" }).skip(offset).limit(PER_PAGE);
+                const data = await HelpModel.find({ status: REQUESTED }).skip(offset).limit(PER_PAGE);
                 return data;
             } catch (error) {
                 console.log(error);
@@ -118,16 +134,16 @@ module.exports = {
                         // post push
                         const { usersAccepted, noPeopleRequired, _id } = data._doc;
                         if (key == "usersRequested") {
-                            await notifyUser(value.uid, "Helper willing to help you ...", "HELPER_REQUESTED", _id)
+                            await notifyUser(value.uid, "Helper willing to help you ...", HELPER_REQUESTED, _id)
                             await updateUser(null, { uid: value.uid, key: "helpedHelpRequests", value: _id, operation: "push", type: "array" });
                         } else if (key === "usersAccepted" || key === "usersRejected") {
                             if(key === "usersAccepted") {
-                                await notifyUser(value.uid, "you got accepted", "HELPER_ACCEPTED", _id)
+                                await notifyUser(value.uid, "you got accepted", HELPER_ACCEPTED, _id)
                                 if (usersAccepted.length === noPeopleRequired) {
-                                    data = await HelpModel.findByIdAndUpdate({ _id: id }, { "status": "ON_GOING" }, { new: true });
+                                    data = await HelpModel.findByIdAndUpdate({ _id: id }, { "status": ON_GOING }, { new: true });
                                 }
                             } else if(key === "usersRejected") {
-                                await notifyUser(value.uid, "you got rejected sorry...")
+                                await notifyUser(value.uid, "you got rejected sorry...", REQUESTER_REJECTED)
                             }
                             data = await HelpModel.findByIdAndUpdate({ _id: id }, { "$pull": { "usersRequested": { uid: value.uid } } }, { new: true });   
                         }
@@ -136,6 +152,7 @@ module.exports = {
                         // TODO : Extract this to new resolver function
                         data = await HelpModel.findByIdAndUpdate({ _id: id }, { [`$pull`]: { [key]: value } }, { new: true });
                         data = await HelpModel.findByIdAndUpdate({ _id: id }, { [`$push`]: { "usersCancelled": value } }, { new: true });
+                        notifyUser(data._doc.creator, "Some on rejected to help you, please check", HELPER_CANCELLED, id)
                     }
                 } else {
                     // update
@@ -143,11 +160,12 @@ module.exports = {
 
                     // post update
                     const { usersAccepted } = data._doc;
-                    if (data._doc && data._doc.status === "COMPLETED") {
+                    if (data._doc && data._doc.status === COMPLETED) {
                         addXpToUsersAndNotify(usersAccepted);
-                    } else if(data._doc && data._doc.status === "CANCELLED") {
-                        // TODO - Need to send notifications for users who are accepted
-                        // TODO - Need to send notifications for users who are requested
+                    } else if(data._doc && data._doc.status === CANCELLED) {
+                        data._doc.usersRequested.forEach((user) => {
+                            notifyUser(user.uid, "Request got cancelled", REQUESTER_CANCELLED, id)
+                        })
                         data = await HelpModel.findByIdAndUpdate(
                             { _id: id }, 
                             { "usersAccepted": [] , "usersRequested": [], "usersCancelled": [], "usersRejected": [] }, 

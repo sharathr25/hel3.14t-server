@@ -93,7 +93,8 @@ module.exports = `
         message: String!,
         timeStamp: Date,
         type: String,
-        idOfHelpRequest: String
+        idOfHelpRequest: String,
+        isReaded: Boolean
     }
 
     type User {
