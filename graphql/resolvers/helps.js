@@ -192,7 +192,6 @@ module.exports = {
                     }
                 }
                 pubsub.publish(UPDATE_HELP, { onUpdateHelp: { ...data._doc } });
-                console.log(data._doc)
                 return data._doc;
             } catch (error) {
                 console.log(error);
@@ -210,6 +209,28 @@ module.exports = {
                 throw new Error;
             }
         },
+        requestToHelp: async (root, args, context) => {
+            try {
+                const { tokenForPushNotification } = context;
+                const { idOfHelpRequest, userDetails } = args;
+                const { uid } = userDetails;
+                let data = await HelpModel.findById({ _id: idOfHelpRequest });
+                const { creator, usersRequested = []} = data._doc;
+                if(isUserAlreadyInUsers(usersRequested, uid)) return data._doc;
+                data = await HelpModel.findByIdAndUpdate(
+                    { _id: idOfHelpRequest },
+                    { "$push" : { "usersRequested": {...userDetails, pushNotificationToken: tokenForPushNotification } } }, 
+                    { new: true }
+                );
+                notifyUser(creator, HELPER_REQUESTED)
+                // TODO: need to set creators push notification token in help request when he first created it
+                // TODO: send push notification to creator
+                return data._doc;
+            } catch (error) {
+                console.log(error)
+                throw new Error;
+            }
+        }
     },
     Subscription: {
         onCreateHelp: {

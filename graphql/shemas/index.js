@@ -24,6 +24,14 @@ module.exports = `
         description: String!
     }
 
+    input UserDetails {
+        uid: String!, 
+        username: String!, 
+        xp: Int!, 
+        stars: Int!,
+        mobileNo: String!
+    }
+
     type Mutation {
         createHelp(data:HelpRequestInput!):HelpRequest!
         updateHelp(id:String!, key:String!, value:Any, type:String, operation:String):HelpRequest!
@@ -33,6 +41,7 @@ module.exports = `
         deleteUser(uid:String):User!
         incrementXpForUser(uid:String):User!
         addStarsForuser(uid:String):User!
+        requestToHelp(idOfHelpRequest: String!, userDetails: UserDetails!): HelpRequest!
     }
 
     type Subscription {
