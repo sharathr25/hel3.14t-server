@@ -50,6 +50,7 @@ module.exports = `
         mobileNo: String!,
         xp: Int!,
         stars: Int!
+        pushNotificationToken: String
     }
 
     type AcceptedUser {
@@ -60,20 +61,24 @@ module.exports = `
         xp: Int!
         stars: Int!
         starsForCreator: Int
+        pushNotificationToken: String
     }
 
     type RejectedUser {
         uid: String!
+        pushNotificationToken: String
     }
 
     type CancelledUser {
         uid: String!
+        pushNotificationToken: String
     }
 
     type HelpRequest {
         _id: ID!
         creator: String!
         creatorName: String!
+        pushNotificationToken: String
         mobileNo: String!
         name: String!
         latitude: Float!

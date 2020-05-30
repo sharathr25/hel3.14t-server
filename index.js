@@ -44,10 +44,22 @@ const isValid = (req) => {
     return { isValid };
 }
 
+const getPushNotificationToken = (req) => {
+    let tokenForPushNotification = ""
+    if(req) {
+        const { headers } = req;
+        const { authorization } = headers;
+        if(authorization) {
+            tokenForPushNotification = authorization.split(' ')[2];
+        }
+    }
+    return { tokenForPushNotification }
+}
+
 const server = new ApolloServer({
     typeDefs: gql`${schema}`,
     resolvers,
-    context: ({ req }) => req
+    context: ({ req }) => getPushNotificationToken(req)
 })
 
 server.applyMiddleware({app});

@@ -3,11 +3,15 @@ const userResolvers = require('./user');
 const { PubSub } = require('apollo-server-express');
 const { Mutation } = userResolvers;
 const { addStarsForuser, incrementXpForUser, updateUser } = Mutation;
-const { NOTIFICATION_TYPES, HELP_REQUEST_STATUS } = require('../../constants');
+const { NOTIFICATION_TYPES, HELP_REQUEST_STATUS, NOTIFICATION_MESSAGES } = require('../../constants');
+const admin = require('firebase-admin');
+const serviceAccount = require('../../haisaa-f674b-firebase-adminsdk-2cbqx-3e3dbabe10.json')
+
+admin.initializeApp({credential: admin.credential.cert(serviceAccount)});
 
 const { 
     HELPER_REQUESTED,
-    HELPER_ACCEPTED,
+    REQUESTER_ACCEPTED,
     HELPER_CANCELLED,
     REQUESTER_CANCELLED,
     REQUESTER_REJECTED
@@ -36,16 +40,27 @@ const addXpToUsersAndNotify = (users) => {
     });
 }
 
-const notifyUser = async (uid, message, type = "", idOfHelpRequest = "") => {
-    await updateUser(null, 
-        { 
-            uid, 
-            key: "notifications", 
-            type: "array", 
-            operation: "push", 
-            value: { message, timeStamp: new Date().getTime(), type, idOfHelpRequest 
-        } 
-    });
+const notifyUser = async (uid, type = "", idOfHelpRequest = "", notificationTokenOfUser = "") => {
+    try {
+        // to send push notification
+        // if(notificationTokenOfUser) {
+            // await admin.messaging().send({ 
+            //     notification: { title: NOTIFICATION_MESSAGES[type] },
+            //     token: notificationTokenOfUser 
+            // });
+        // }
+        await updateUser(null, 
+            { 
+                uid, 
+                key: "notifications", 
+                type: "array", 
+                operation: "push", 
+                value: { message: NOTIFICATION_MESSAGES[type], timeStamp: new Date().getTime(), type, idOfHelpRequest 
+            } 
+        }); 
+    } catch (error) {
+        console.log(error)
+    }
 }
 
 const updateArrayTypeInHelpModel = async (args) => {
@@ -101,10 +116,11 @@ module.exports = {
     },
     Mutation: {
         createHelp: async (root, args, context) => {
+            const { tokenForPushNotification = "" } = context;
             try {
                 const { data } = args;
                 const { creator } = data;
-                const res = await new HelpModel(data).save();
+                const res = await new HelpModel({...data, pushNotificationToken: tokenForPushNotification }).save();
                 if (res._doc) {
                     updateUser(null, { uid: creator, key: "createdHelpRequests", value: res._id, type: "array", operation: "push" }, null);
                 }
@@ -115,6 +131,7 @@ module.exports = {
             }
         },
         updateHelp: async (root, args, context) => {
+            const { tokenForPushNotification } = context; 
             const { id, key, value, type = "update", operation = "update" } = args;
             try {
                 let data;
@@ -129,21 +146,23 @@ module.exports = {
                         }
 
                         // push
-                        data = await HelpModel.findByIdAndUpdate({ _id: id }, { [`$push`]: { [key]: value } }, { new: true });
-                        
+                        if(key === "usersRequested")
+                            data = await HelpModel.findByIdAndUpdate({ _id: id }, { [`$push`]: { [key]: {...value, pushNotificationToken: tokenForPushNotification } } }, { new: true });
+                        else 
+                            data = await HelpModel.findByIdAndUpdate({ _id: id }, { [`$push`]: { [key]: value } }, { new: true });
                         // post push
                         const { usersAccepted, noPeopleRequired, _id } = data._doc;
                         if (key == "usersRequested") {
-                            await notifyUser(value.uid, "Helper willing to help you ...", HELPER_REQUESTED, _id)
+                            await notifyUser(value.uid, HELPER_REQUESTED, _id)
                             await updateUser(null, { uid: value.uid, key: "helpedHelpRequests", value: _id, operation: "push", type: "array" });
                         } else if (key === "usersAccepted" || key === "usersRejected") {
                             if(key === "usersAccepted") {
-                                await notifyUser(value.uid, "you got accepted", HELPER_ACCEPTED, _id)
+                                await notifyUser(value.uid, REQUESTER_ACCEPTED, _id)
                                 if (usersAccepted.length === noPeopleRequired) {
                                     data = await HelpModel.findByIdAndUpdate({ _id: id }, { "status": ON_GOING }, { new: true });
                                 }
                             } else if(key === "usersRejected") {
-                                await notifyUser(value.uid, "you got rejected sorry...", REQUESTER_REJECTED)
+                                await notifyUser(value.uid, REQUESTER_REJECTED)
                             }
                             data = await HelpModel.findByIdAndUpdate({ _id: id }, { "$pull": { "usersRequested": { uid: value.uid } } }, { new: true });   
                         }
@@ -152,7 +171,7 @@ module.exports = {
                         // TODO : Extract this to new resolver function
                         data = await HelpModel.findByIdAndUpdate({ _id: id }, { [`$pull`]: { [key]: value } }, { new: true });
                         data = await HelpModel.findByIdAndUpdate({ _id: id }, { [`$push`]: { "usersCancelled": value } }, { new: true });
-                        notifyUser(data._doc.creator, "Some on rejected to help you, please check", HELPER_CANCELLED, id)
+                        notifyUser(data._doc.creator, HELPER_CANCELLED, id)
                     }
                 } else {
                     // update
@@ -164,7 +183,7 @@ module.exports = {
                         addXpToUsersAndNotify(usersAccepted);
                     } else if(data._doc && data._doc.status === CANCELLED) {
                         data._doc.usersRequested.forEach((user) => {
-                            notifyUser(user.uid, "Request got cancelled", REQUESTER_CANCELLED, id)
+                            notifyUser(user.uid, REQUESTER_CANCELLED, id)
                         })
                         data = await HelpModel.findByIdAndUpdate(
                             { _id: id }, 
@@ -173,6 +192,7 @@ module.exports = {
                     }
                 }
                 pubsub.publish(UPDATE_HELP, { onUpdateHelp: { ...data._doc } });
+                console.log(data._doc)
                 return data._doc;
             } catch (error) {
                 console.log(error);
