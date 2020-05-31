@@ -77,7 +77,6 @@ module.exports = {
         },
         addStarsForuser: async (root, args, context) => {
             const { uid, starsGivenByUser } = args;
-            console.log(args)
             try {
                 let user = await User.findOne({ uid });
                 const {stars, totalRaters } = user._doc;
@@ -86,7 +85,6 @@ module.exports = {
                     { stars: stars + starsGivenByUser, totalRaters: totalRaters +  1 }, 
                     { new: true }
                 );
-                console.log(user._doc)
                 pubsub.publish(INCREMENT_XP_FOR_USER, { onXpIncrement: { ...user._doc } });
                 return user._doc;
             } catch (error) {

@@ -24,12 +24,28 @@ module.exports = `
         description: String!
     }
 
-    input UserDetails {
+    input UserDetailsToRequest {
         uid: String!, 
         username: String!, 
         xp: Int!, 
         stars: Int!,
         mobileNo: String!
+    }
+
+    input UserDetailsToAccept {
+        uid: String!, 
+        username: String!, 
+        mobileNo: String!,
+        pushNotificationToken: String!
+    } 
+
+    input UserDetailsToReject {
+        uid: String!,
+        pushNotificationToken: String!
+    }
+
+    input UserDetailsToCancel {
+        uid: String!
     }
 
     type Mutation {
@@ -41,7 +57,15 @@ module.exports = `
         deleteUser(uid:String):User!
         incrementXpForUser(uid:String):User!
         addStarsForuser(uid:String):User!
-        requestToHelp(idOfHelpRequest: String!, userDetails: UserDetails!): HelpRequest!
+        requestToHelp(idOfHelpRequest: String!, userDetails: UserDetailsToRequest!): HelpRequest!
+        cancelToHelp(idOfHelpRequest: String!, userDetails: UserDetailsToCancel!): HelpRequest
+        acceptHelper(idOfHelpRequest: String!, userDetails: UserDetailsToAccept!): HelpRequest
+        rejectHelper(idOfHelpRequest: String!, userDetails: UserDetailsToReject!): HelpRequest
+        finishHelp(idOfHelpRequest: String!): HelpRequest
+        repostHelp(idOfHelpRequest: String!): HelpRequest
+        cancelHelp(idOfHelpRequest: String!): HelpRequest
+        giveRatingsToHelper(idOfHelpRequest: String!, ratings: Int!, uid: String!): HelpRequest
+        giveRatingsToCreator(idOfHelpRequest: String!, ratings: Int!, uid: String!): HelpRequest
     }
 
     type Subscription {

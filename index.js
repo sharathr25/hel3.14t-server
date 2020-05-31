@@ -73,7 +73,7 @@ ws.listen({port:process.env.PORT || 4000}, () => {
 });
 
 mongoose.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false }).then(() => {
-    console.log("DB connencted");
+    console.log("DB connected");
 }).catch((err) => {
     console.log(err);
 });
