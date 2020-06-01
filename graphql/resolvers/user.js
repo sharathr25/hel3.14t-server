@@ -147,7 +147,6 @@ module.exports = {
                     }, 
                     { new: true }
                 );
-                console.log(user._doc)
                 return user._doc; 
             } catch (error) {
                 console.log(error)
