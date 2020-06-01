@@ -6,7 +6,6 @@ const pubsub = new PubSub();
 const XP_INCREMENT_PER_HELP = 10;
 const NUMBER_OF_TOP_HELPERS = 50;
 
-const UPDATE_USER = "UPDATE_USER";
 const INCREMENT_XP_FOR_USER = "INCREMENT_XP_FOR_USER";
 const INCREMENT_STARS_FOR_USER = "INCREMENT_STARS_FOR_USER";
 
@@ -43,22 +42,6 @@ module.exports = {
                 return user._doc;
             } catch (error) {
                 console.log(error);
-                throw new Error;
-            }
-        },
-        updateUser: async (root, args, context) => {
-            const { uid, key, value, type = "update", operation = "update" } = args;
-            try {
-                let user;
-                if (type === "array") {
-                    user = await User.findOneAndUpdate({ uid }, { [`$${operation}`]: { [key]: value } }, { new: true });
-                } else {
-                    user = await User.findOneAndUpdate({ uid }, { [key]: value }, { new: true });
-                }
-                pubsub.publish(UPDATE_USER, { onUpdateUser: { ...user._doc } });
-                return user._doc;
-            } catch (error) {
-                console.log(error)
                 throw new Error;
             }
         },
@@ -102,11 +85,77 @@ module.exports = {
                 throw new Error;
             }
         },
+        addNotification: async (root, args, context) => {
+            try {
+                const { uid, notification } = args;
+                const user = await User.findOneAndUpdate(
+                    { uid }, 
+                    { "$push": { 
+                            "notifications": { ...notification, timeStamp: new Date().getTime() } 
+                        } 
+                    }, 
+                    { new: true }
+                );
+                return user._doc;
+            } catch (error) {
+                console.log(error)
+                throw new Error;
+            }
+        },
+        removeNotification: async (root, args, context) => {
+            try {
+                const { uid, idOfNotification } = args;
+                const user = await User.findOneAndUpdate(
+                    { uid }, 
+                    { "$pull": { 
+                            "notifications": { _id: idOfNotification } 
+                        } 
+                    },
+                    { new: true }
+                );
+                return user._doc;
+            } catch (error) {
+                console.log(error)
+                throw new Error;
+            }
+        },
+        addCreatedHelpRequest: async (root, args, context) => {
+            try {
+                const { uid, idOfHelpRequest } = args;
+                const user = await User.findOneAndUpdate(
+                    { uid }, 
+                    { "$push": { 
+                            "createdHelpRequests": idOfHelpRequest
+                        } 
+                    }, 
+                    { new: true }
+                );
+                return user._doc; 
+            } catch (error) {
+                console.log(error)
+                throw new Error;
+            }
+        },
+        addHelpedHelpRequest: async (root, args, context) => {
+            try {
+                const { uid, idOfHelpRequest } = args;
+                const user = await User.findOneAndUpdate(
+                    { uid }, 
+                    { "$push": { 
+                            "helpedHelpRequests": idOfHelpRequest
+                        } 
+                    }, 
+                    { new: true }
+                );
+                console.log(user._doc)
+                return user._doc; 
+            } catch (error) {
+                console.log(error)
+                throw new Error;
+            }
+        }
     },
     Subscription: {
-        onUpdateUser: {
-            subscribe: () => pubsub.asyncIterator(UPDATE_USER)
-        },
         onXpIncrement: {
             subscribe: () => pubsub.asyncIterator(INCREMENT_XP_FOR_USER)
         }

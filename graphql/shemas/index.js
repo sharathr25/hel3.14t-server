@@ -48,15 +48,24 @@ module.exports = `
         uid: String!
     }
 
+    input NotificationInput {
+        title: String
+        message: String!
+        idOfHelpRequest:String!
+        type: String
+    }
+
     type Mutation {
         createHelp(data:HelpRequestInput!):HelpRequest!
-        updateHelp(id:String!, key:String!, value:Any, type:String, operation:String):HelpRequest!
         deleteHelp(id:String!):HelpRequest!
         createUser(uid:String!, username: String!):User!
-        updateUser(uid:String!, key:String!, value:Any, type:String, operation:String):User!
         deleteUser(uid:String):User!
         incrementXpForUser(uid:String):User!
+        addCreatedHelpRequest(uid: String!, idOfHelpRequest: String!): User
+        addHelpedHelpRequest(uid: String!, idOfHelpRequest: String!): User
         addStarsForuser(uid:String):User!
+        addNotification(uid: String!, notification: NotificationInput!): User
+        removeNotification(uid: String!, idOfNotification:String!): User
         requestToHelp(idOfHelpRequest: String!, userDetails: UserDetailsToRequest!): HelpRequest!
         cancelToHelp(idOfHelpRequest: String!, userDetails: UserDetailsToCancel!): HelpRequest
         acceptHelper(idOfHelpRequest: String!, userDetails: UserDetailsToAccept!): HelpRequest
@@ -72,7 +81,6 @@ module.exports = `
         onCreateHelp: HelpRequest!,
         onUpdateHelp: HelpRequest!,
         onDeleteHelp: HelpRequest!,
-        onUpdateUser: User!
         onXpIncrement: User!
     }
 
